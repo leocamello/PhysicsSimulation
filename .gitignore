@@ -1,0 +1,34 @@
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Build directory (contains build artifacts and fetched dependencies)
+build/
+
+# Doxygen output directory (if generated outside build/)
+docs/html/
+docs/latex/
+
+# Executable file (adjust if name differs)
+PhysicsSimulation
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+# Other temporary/log files
+*.log
+*.tmp
+*.temp
