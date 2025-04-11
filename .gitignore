@@ -12,9 +12,6 @@ build/
 docs/html/
 docs/latex/
 
-# Executable file (adjust if name differs)
-PhysicsSimulation
-
 # OS generated files
 .DS_Store
 Thumbs.db
