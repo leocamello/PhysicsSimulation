@@ -16,3 +16,14 @@ target_link_libraries(PhysicsSimulation_tests PRIVATE gtest gtest_main gmock)
 # Discover and add tests to CTest
 include(GoogleTest)
 gtest_discover_tests(PhysicsSimulation_tests)
+
+# Add test executables
+add_executable(vector_test vector_test.cpp)
+
+# Link test executables against Google Test and your library/source files
+# Ensure your main library target (e.g., PhysicsSimulationLib) is defined in the root CMakeLists.txt
+# and includes the vector.h header (implicitly or explicitly).
+target_link_libraries(vector_test PRIVATE gtest_main)
+
+# Add tests to CTest
+add_test(NAME Vector3Tests COMMAND vector_test)
