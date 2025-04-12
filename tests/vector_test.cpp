@@ -1,11 +1,7 @@
 #include <gtest/gtest.h>
 #include "PhysicsSimulation/vector.h" // Include the header for Vector3
+#include "test_utils.h" // Include the shared helper functions
 #include <cmath> // For std::sqrt, std::abs
-
-// Helper function for comparing floats with a tolerance
-bool AreFloatsClose(float a, float b, float tolerance = 1e-5f) {
-    return std::abs(a - b) < tolerance;
-}
 
 // Test fixture for Vector3 tests
 class Vector3Test : public ::testing::Test {
