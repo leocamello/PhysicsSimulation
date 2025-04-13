@@ -13,7 +13,7 @@
 
 VerletIntegrator::VerletIntegrator(float drag) noexcept {
     // Clamp initial drag value to a reasonable range [0, 1]
-    drag_ = (drag < 0.0f) ? 0.0f : (drag > 1.0f) ? 1.0f : drag;
+    drag_ = std::clamp(drag, 0.0f, 1.0f);
 }
 
 void VerletIntegrator::Integrate(const Vector3& acceleration, Particle& particle, float dt) {
@@ -23,24 +23,24 @@ void VerletIntegrator::Integrate(const Vector3& acceleration, Particle& particle
     }
 
     // Store current position before calculating the new one
-    const Vector3 temp_position = particle._currPosition;
+    const Vector3 temp_position = particle.position_;
 
     // Calculate displacement based on previous step: (p(t) - p(t-dt))
-    const Vector3 displacement = particle._currPosition - particle._prevPosition;
+    const Vector3 displacement = particle.position_ - particle.previous_position_;
 
     // Calculate scaled acceleration term: a(t) * dt * dt
     const Vector3 scaled_acceleration = acceleration * (dt * dt);
 
     // Calculate next position using Verlet formula with drag:
-    particle._currPosition = particle._currPosition + displacement * (1.0f - drag_) + scaled_acceleration;
+    particle.position_ = particle.position_+ displacement * (1.0f - drag_) + scaled_acceleration;
 
     // Update previous position for the next step
-    particle._prevPosition = temp_position;
+    particle.previous_position_ = temp_position;
 }
 
 void VerletIntegrator::set_drag(float drag) noexcept {
     // Clamp drag value to a reasonable range [0, 1]
-    drag_ = (drag < 0.0f) ? 0.0f : (drag > 1.0f) ? 1.0f : drag;
+    drag_ = std::clamp(drag, 0.0f, 1.0f);
 }
 
 float VerletIntegrator::drag() const noexcept {

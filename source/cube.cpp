@@ -1,63 +1,84 @@
-// cube.cpp
-// Simula��o F�sica para Jogos
-// L. Camello - camello@tecgraf.puc-rio.br
-// PUC-Rio, Set 2009
+/**
+ * @file cube.cpp
+ * @brief Implements the Cube class methods.
+ * @author L. Camello (original), GitHub Copilot (refactored)
+ * @date 2025-04-13
+ */
 
-#include "PhysicsSimulation/graphics.h"
 #include "PhysicsSimulation/cube.h"
+#include "PhysicsSimulation/graphics.h" // Include for Draw()
+#include "PhysicsSimulation/particle.h" // Included via cube.h
+#include "PhysicsSimulation/vector.h"   // Included via cube.h
+#include <array>                        // For std::array used in Draw
+#include <vector>                       // For std::vector used in Draw
 
-Cube::Cube()
-{
+//namespace PhysicsSimulation {
+
+Cube::Cube() noexcept {
+    // Default constructor initializes particles_ using Particle's default constructor.
+    // color_ uses its default member initializer.
 }
 
-Cube::~Cube()
-{
+Cube::Cube(const Vector3& center, float size,
+           float particle_mass, float particle_radius,
+           const Vector3& color, Particle::Type type) noexcept
+    : color_(color) {
+    // Calculate half-size for easier vertex positioning
+    const float half_size = size * 0.5f;
+    const float x_min = center.x - half_size;
+    const float x_max = center.x + half_size;
+    const float y_min = center.y - half_size;
+    const float y_max = center.y + half_size;
+    const float z_min = center.z - half_size;
+    const float z_max = center.z + half_size;
+
+    // Use the Particle constructor to initialize each particle in the array
+    particles_[0] = Particle(particle_mass, particle_radius, {x_min, y_max, z_min}, {}, color, type);
+    particles_[1] = Particle(particle_mass, particle_radius, {x_max, y_max, z_min}, {}, color, type);
+    particles_[2] = Particle(particle_mass, particle_radius, {x_max, y_max, z_max}, {}, color, type);
+    particles_[3] = Particle(particle_mass, particle_radius, {x_min, y_max, z_max}, {}, color, type);
+    particles_[4] = Particle(particle_mass, particle_radius, {x_min, y_min, z_min}, {}, color, type);
+    particles_[5] = Particle(particle_mass, particle_radius, {x_max, y_min, z_min}, {}, color, type);
+    particles_[6] = Particle(particle_mass, particle_radius, {x_max, y_min, z_max}, {}, color, type);
+    particles_[7] = Particle(particle_mass, particle_radius, {x_min, y_min, z_max}, {}, color, type);
+    // Note: Initial velocity is default (zero). Color is passed to particles too.
 }
 
-void Cube::Initialize(float mass, 
-					  float radius,
-		float xMin, float xMax, 
-		float yMin, float yMax, 
-		float zMin, float zMax,
-		float r, float g, float b,
-		Particle::ParticleType type)
-{
-	_mass = mass/8;
-	_radius = radius;
-	_particles[0].Initialize(_mass, _radius, xMin, yMax, zMin, r, g, b, type);
-	_particles[1].Initialize(_mass, _radius, xMax, yMax, zMin, r, g, b, type);
-	_particles[2].Initialize(_mass, _radius, xMax, yMax, zMax, r, g, b, type);
-	_particles[3].Initialize(_mass, _radius, xMin, yMax, zMax, r, g, b, type);
-	_particles[4].Initialize(_mass, _radius, xMin, yMin, zMin, r, g, b, type);
-	_particles[5].Initialize(_mass, _radius, xMax, yMin, zMin, r, g, b, type);
-	_particles[6].Initialize(_mass, _radius, xMax, yMin, zMax, r, g, b, type);
-	_particles[7].Initialize(_mass, _radius, xMin, yMin, zMax, r, g, b, type);
+// Destructor is defaulted in the header.
+
+void Cube::Draw() const {
+    // Prepare vertex coordinates for Graphics::DrawQuads
+    std::vector<float> coords;
+    coords.reserve(kNumVertices * 3); // Reserve space for efficiency
+    for (const auto& p : particles_) {
+        const Vector3& pos = p.position(); // Use getter
+        coords.push_back(pos.x);
+        coords.push_back(pos.y);
+        coords.push_back(pos.z);
+    }
+
+    // Define the indices for the 6 faces (quads)
+    // Using std::array for compile-time safety and clarity
+    static constexpr std::array<unsigned int, kNumFaces * 4> kQuadIndices = {
+        0, 3, 2, 1, // Top face
+        4, 5, 6, 7, // Bottom face
+        0, 1, 5, 4, // Front face
+        1, 2, 6, 5, // Right face
+        2, 3, 7, 6, // Back face
+        0, 4, 7, 3  // Left face
+    };
+
+    // Call the graphics function
+    // TODO: Check if Graphics::DrawQuads can take Vector3 color directly
+    // NOTE: Using const_cast as DrawQuads expects unsigned int* but indices are const.
+    // This assumes DrawQuads does not modify the index data.
+    Graphics::DrawQuads(
+        kQuadIndices.size(), // Total number of indices
+        const_cast<unsigned int*>(kQuadIndices.data()), // Pointer to index data
+        coords.data(),       // Pointer to coordinate data
+        color_.x, color_.y, color_.z); // Use color_ members
 }
 
-void Cube::Update()
-{
-}
+// Removed empty Update() method implementation.
 
-void Cube::Draw()
-{
-	float coord[FACES * 4];
-	for(int i = 0; i < VERTICES; i++)
-	{
-		coord[i*3+0] = _particles[i]._currPosition.x; 
-		coord[i*3+1] = _particles[i]._currPosition.y; 
-		coord[i*3+2] = _particles[i]._currPosition.z;
-	}
-	
-	unsigned int quads[FACES * 4] = 
-	{
-		0, 3, 2, 1,
-		4, 5, 6, 7,
-		0, 1, 5, 4,
-		1, 2, 6, 5,
-		2, 3, 7, 6,
-		0, 4, 7, 3
-	};
-
-	Graphics::DrawQuads(
-		FACES * 4, quads, coord, _red, _green, _blue);
-}
+//} // namespace PhysicsSimulation

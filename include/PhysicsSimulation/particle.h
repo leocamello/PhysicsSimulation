@@ -1,131 +1,142 @@
 /**
  * @file particle.h
- * @brief Defines the Particle class representing a point mass in the simulation.
- * @author L. Camello (original), L. Nascimento (updated)
- * @date 2025-04-12
+ * @brief Defines the Particle class representing a basic physical entity.
+ * @author L. Camello (original), L. Nascimento (updated), GitHub Copilot (refactored)
+ * @date 2025-04-13
  */
 
-#ifndef PHYSICS_SIMULATION_PARTICLE_H // Renamed include guard for consistency
+#ifndef PHYSICS_SIMULATION_PARTICLE_H
 #define PHYSICS_SIMULATION_PARTICLE_H
 
-#include "vector.h"
+#include "PhysicsSimulation/vector.h" // Include Vector3 definition
 
-// TODO: Consider uncommenting and using this namespace
-// namespace PhysicsSimulation {
+// Forward declarations
+// namespace Graphics { class ???; } // Forward declare Graphics if needed for Draw
+
+// namespace PhysicsSimulation { // TODO: Add namespace if used elsewhere
 
 /**
- * @brief Represents a particle (point mass) in the physics simulation.
+ * @brief Represents a point mass particle in the physics simulation.
  *
- * Stores physical properties like mass, radius, position, velocity,
- * and resultant force. Also handles basic drawing and state updates.
+ * Stores the particle's physical state (position, velocity, mass, etc.)
+ * and accumulates forces acting upon it.
  */
-class Particle
-{
+class Particle {
 public:
-    /**
-     * @brief Defines the type of particle, affecting its behavior in the simulation.
-     */
-    enum ParticleType
-    {
-        PASSIVE, /**< Particle is affected by forces but does not exert forces (or has fixed behavior). */
-        ACTIVE   /**< Particle actively participates in interactions and force calculations. */
+    /** @brief Defines the type/state of the particle (e.g., active or fixed). */
+    enum class Type {
+        kActive, // Particle moves according to physics
+        kFixed   // Particle position is fixed (infinite mass conceptually)
+        // TODO: Add other types if needed (e.g., kStatic for immovable objects)
     };
 
-    /** @brief Default constructor. */
-    Particle() noexcept; // Added noexcept
+    /**
+     * @brief Default constructor. Initializes a particle at the origin with zero mass and velocity.
+     */
+    Particle() noexcept;
 
-    /** @brief Destructor. */
-    ~Particle() noexcept; // Added noexcept
+    /**
+     * @brief Constructs a particle with specified initial state.
+     *
+     * @param mass The mass of the particle (should be > 0 for movable objects).
+     * @param radius The radius of the particle (for collision/visualization).
+     * @param position The initial position vector.
+     * @param velocity The initial velocity vector.
+     * @param color The color for visualization (default: white).
+     * @param type The type of the particle (default: kActive).
+     */
+    Particle(float mass, float radius,
+             const Vector3& position, const Vector3& velocity,
+             const Vector3& color = Vector3(1.0f, 1.0f, 1.0f),
+             Type type = Type::kActive) noexcept;
 
+    /**
+     * @brief Default virtual destructor.
+     */
+    virtual ~Particle() = default;
+
+    // --- Prevent Copying (for now) ---
+    // Copying particles might require careful handling of state.
+    // If copying is needed, implement proper copy constructor/assignment.
+    Particle(const Particle&) = delete;
+    Particle& operator=(const Particle&) = delete;
+
+    // --- Allow Moving ---
+    // Moving particles is generally safe and useful for container management.
+    Particle(Particle&&) noexcept = default;
+    Particle& operator=(Particle&&) noexcept = default;
+
+    /**
+     * @brief Adds a force vector to the particle's force accumulator.
+     * @param force The force vector to add.
+     */
+    void AddForce(const Vector3& force) noexcept;
+
+    /**
+     * @brief Clears the accumulated forces on the particle (sets to zero).
+     * Should be called typically at the beginning of each simulation step.
+     */
+    void ClearForceAccumulator() noexcept;
+
+    /**
+     * @brief Draws the particle visually (implementation depends on Graphics interface).
+     * @note Consider moving drawing logic outside the core physics class.
+     */
+    void Draw() const;
+
+    // --- Accessors (Getters) ---
+    float mass() const noexcept { return mass_; }
+    float radius() const noexcept { return radius_; }
+    const Vector3& position() const noexcept { return position_; }
+    const Vector3& velocity() const noexcept { return velocity_; }
+    const Vector3& previous_position() const noexcept { return previous_position_; }
+    const Vector3& force_accumulator() const noexcept { return force_accumulator_; }
+    const Vector3& color() const noexcept { return color_; }
+    Type type() const noexcept { return type_; }
+
+    // --- Mutators (Setters) ---
+    // Use setters sparingly. Prefer updating state via integration/forces.
+    void set_position(const Vector3& position) noexcept { position_ = position; }
+    void set_velocity(const Vector3& velocity) noexcept { velocity_ = velocity; }
+    void set_previous_position(const Vector3& prev_pos) noexcept { previous_position_ = prev_pos; }
+    void set_mass(float mass) noexcept { mass_ = mass; } // Be careful changing mass mid-simulation
+    void set_radius(float radius) noexcept { radius_ = radius; }
+    void set_color(const Vector3& color) noexcept { color_ = color; }
+    void set_type(Type type) noexcept { type_ = type; }
+
+
+    // --- Friend Declarations (for Integrators) ---
+    // Grant specific classes access to private members if necessary for performance
+    // or tight coupling (like integrators modifying position/velocity directly).
+    // Use this cautiously. Prefer using public methods if possible.
+    friend class EulerIntegrator;
+    friend class VerletIntegrator;
+    // Add other friends if needed (e.g., specific collision handlers)
+
+private:
     // --- Physical Properties ---
-    /** @brief Mass of the particle. */
-    float _mass = 1.0f; // Provide default value
-    /** @brief Radius of the particle (for collision detection and drawing). */
-    float _radius = 0.1f; // Provide default value
-    /** @brief Current position vector of the particle. */
-    Vector3 _currPosition;
-    /** @brief Position vector of the particle in the previous time step. */
-    Vector3 _prevPosition;
-    /** @brief Current velocity vector of the particle. */
-    Vector3 _currVelocity;
-    /** @brief Sum of all forces acting on the particle in the current time step. */
-    Vector3 _resultantForce;
+    float mass_ = 0.0f;          /**< Mass of the particle. */
+    float radius_ = 0.1f;        /**< Radius (for collision/visualization). */
 
-    // --- Visual Properties ---
-    /** @brief Red color component (0.0 to 1.0). */
-    float _red = 1.0f; // Provide default value
-    /** @brief Green color component (0.0 to 1.0). */
-    float _green = 1.0f; // Provide default value
-    /** @brief Blue color component (0.0 to 1.0). */
-    float _blue = 1.0f; // Provide default value
+    // --- State Variables ---
+    Vector3 position_;           /**< Current position vector p(t). */
+    Vector3 velocity_;           /**< Current velocity vector v(t). */
+    Vector3 previous_position_;  /**< Position vector at the previous time step p(t-dt). Used by Verlet. */
 
-    // --- Simulation Properties ---
-    /** @brief Type of the particle (ACTIVE or PASSIVE). */
-    ParticleType _particleType = ACTIVE; // Provide default value
+    // --- Force Accumulation ---
+    Vector3 force_accumulator_;  /**< Sum of forces acting on the particle in the current step. */
 
-    /**
-     * @brief Initializes the particle's state with an initial position and zero velocity.
-     * @param m Mass.
-     * @param radius Radius.
-     * @param x Initial x-coordinate.
-     * @param y Initial y-coordinate.
-     * @param z Initial z-coordinate.
-     * @param r Red color component.
-     * @param g Green color component.
-     * @param b Blue color component.
-     * @param type Particle type (ACTIVE or PASSIVE).
-     */
-    void Initialize(
-        float m,
-        float radius,
-        float x, float y, float z,
-        float r, float g, float b,
-        ParticleType type) noexcept; // Added noexcept
+    // --- Visual/Type Properties ---
+    Vector3 color_ = {1.0f, 1.0f, 1.0f}; /**< Color for visualization. */
+    Type type_ = Type::kActive;         /**< Particle type (active, fixed, etc.). */
 
-    /**
-     * @brief Initializes the particle's state with an initial position and velocity.
-     * @param m Mass.
-     * @param radius Radius.
-     * @param px Initial x-coordinate.
-     * @param py Initial y-coordinate.
-     * @param pz Initial z-coordinate.
-     * @param vx Initial x-velocity.
-     * @param vy Initial y-velocity.
-     * @param vz Initial z-velocity.
-     * @param r Red color component.
-     * @param g Green color component.
-     * @param b Blue color component.
-     * @param type Particle type (ACTIVE or PASSIVE).
-     */
-    void Initialize(
-        float m,
-        float radius,
-        float px, float py, float pz,
-        float vx, float vy, float vz,
-        float r, float g, float b,
-        ParticleType type) noexcept; // Added noexcept
-
-    /**
-     * @brief Updates the particle's state (currently empty, intended for future integration steps).
-     * @note This method is expected to be implemented by integration schemes.
-     */
-    void Update() noexcept; // Added noexcept
-
-    /**
-     * @brief Draws the particle as a point using the Graphics interface.
-     */
-    void DrawPoint(); // Drawing might interact with external libs, avoid noexcept
-
-    /**
-     * @brief Draws the particle as a sphere using the Graphics interface.
-     */
-    void DrawSphere(); // Drawing might interact with external libs, avoid noexcept
-
-    /**
-     * @brief Resets the resultant force acting on the particle to zero.
-     * Typically called at the beginning of each simulation step before calculating new forces.
-     */
-    void ResetForces() noexcept; // Added noexcept
+    // Deprecated members (to be removed after confirming they are unused)
+    // float _invMass;
+    // Vector3 _resultantForce; // Replaced by force_accumulator_
+    // Vector3 _currPosition;   // Replaced by position_
+    // Vector3 _currVelocity;   // Replaced by velocity_
+    // Vector3 _prevPosition;   // Replaced by previous_position_
+    // ParticleType _particleType; // Replaced by type_
 };
 
 // } // namespace PhysicsSimulation

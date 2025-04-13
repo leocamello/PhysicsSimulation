@@ -11,6 +11,8 @@
 #include "PhysicsSimulation/vector.h"
 #include "test_utils.h" // For AreVectorsClose
 
+namespace PhysicsSimulation {
+
 // Test fixture for VerletIntegrator tests
 class VerletIntegratorTest : public ::testing::Test {
 protected:
@@ -26,19 +28,19 @@ protected:
     Vector3 prev_pos_ = initial_pos_ - initial_vel_ * dt_; // Calculate consistent previous position
 
     Vector3 acceleration_ = Vector3(0.0f, -9.8f, 0.0f); // Gravity
+    Vector3 initial_color_ = Vector3(1.0f, 1.0f, 1.0f);
+    float initial_mass_ = 1.0f;
+    float initial_radius_ = 0.1f;
 
     void SetUp() override {
-        // Initialize particle before each test
-        particle_.Initialize(
-            1.0f, 0.1f, // mass, radius
-            initial_pos_.x, initial_pos_.y, initial_pos_.z, // position
-            initial_vel_.x, initial_vel_.y, initial_vel_.z, // velocity (used only to set prev_pos)
-            1.0f, 1.0f, 1.0f, // color
-            Particle::ACTIVE
+        // Initialize particle using constructor before each test
+        particle_ = Particle(
+            initial_mass_, initial_radius_,
+            initial_pos_, Vector3(), // Initial velocity in constructor is ignored by Verlet, but needed
+            initial_color_, Particle::Type::kActive // Use new enum
         );
-        // Manually set previous position for Verlet
-        // TODO: Update member access once Particle is refactored
-        particle_._prevPosition = prev_pos_;
+        // Manually set previous position for Verlet using a setter
+        particle_.set_previous_position(prev_pos_);
     }
 };
 
@@ -52,10 +54,10 @@ TEST_F(VerletIntegratorTest, IntegrateBasicStepDefaultDrag) {
     Vector3 displacement = initial_pos_ - prev_pos_;
     Vector3 expected_pos = initial_pos_ + displacement * (1.0f - drag) + acceleration_ * (dt_ * dt_);
 
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, expected_pos));
+    // Use getters to access particle state
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), expected_pos));
     // Check that previous position was updated correctly
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, initial_pos_));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), initial_pos_));
 }
 
 // Test integration step with custom drag
@@ -70,9 +72,9 @@ TEST_F(VerletIntegratorTest, IntegrateBasicStepCustomDrag) {
     Vector3 displacement = initial_pos_ - prev_pos_;
     Vector3 expected_pos = initial_pos_ + displacement * (1.0f - custom_drag) + acceleration_ * (dt_ * dt_);
 
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, expected_pos));
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, initial_pos_));
+    // Use getters
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), expected_pos));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), initial_pos_));
 }
 
 // Test integration with zero acceleration
@@ -85,15 +87,15 @@ TEST_F(VerletIntegratorTest, IntegrateZeroAcceleration) {
     Vector3 displacement = initial_pos_ - prev_pos_;
     Vector3 expected_pos = initial_pos_ + displacement * (1.0f - drag); // No acceleration term
 
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, expected_pos));
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, initial_pos_));
+    // Use getters
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), expected_pos));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), initial_pos_));
 }
 
 // Test integration with zero initial velocity (prev_pos == initial_pos)
 TEST_F(VerletIntegratorTest, IntegrateZeroVelocity) {
-    // TODO: Update member access once Particle is refactored
-    particle_._prevPosition = initial_pos_; // Set previous = current for zero velocity
+    // Set previous = current for zero velocity using setter
+    particle_.set_previous_position(initial_pos_);
     float drag = integrator_.drag();
 
     integrator_.Integrate(acceleration_, particle_, dt_);
@@ -103,20 +105,19 @@ TEST_F(VerletIntegratorTest, IntegrateZeroVelocity) {
     Vector3 expected_pos = initial_pos_ + displacement * (1.0f - drag) + acceleration_ * (dt_ * dt_);
     // Simplifies to: expected_pos = initial_pos_ + acceleration_ * (dt_ * dt_);
 
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, expected_pos));
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, initial_pos_));
+    // Use getters
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), expected_pos));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), initial_pos_));
 }
-
 
 // Test integration with zero time step
 TEST_F(VerletIntegratorTest, IntegrateZeroDeltaTime) {
     integrator_.Integrate(acceleration_, particle_, 0.0f);
 
     // Expected: No change in position
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, initial_pos_));
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, prev_pos_)); // prevPosition also unchanged
+    // Use getters
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), initial_pos_));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), prev_pos_)); // prevPosition also unchanged
 }
 
 // Test integration with very small time step (should do nothing based on epsilon check)
@@ -124,12 +125,12 @@ TEST_F(VerletIntegratorTest, IntegrateSmallDeltaTime) {
     integrator_.Integrate(acceleration_, particle_, 1e-10f);
 
     // Expected: No change in position
-    // TODO: Update member access once Particle is refactored
-    EXPECT_TRUE(AreVectorsClose(particle_._currPosition, initial_pos_));
-    EXPECT_TRUE(AreVectorsClose(particle_._prevPosition, prev_pos_));
+    // Use getters
+    EXPECT_TRUE(AreVectorsClose(particle_.position(), initial_pos_));
+    EXPECT_TRUE(AreVectorsClose(particle_.previous_position(), prev_pos_));
 }
 
-// Test drag setting and clamping
+// Test drag setting and clamping (This test doesn't use the fixture)
 TEST(VerletIntegratorStandaloneTest, DragSettingAndClamping) {
     // Test default drag
     VerletIntegrator integrator1;
@@ -157,3 +158,5 @@ TEST(VerletIntegratorStandaloneTest, DragSettingAndClamping) {
     integrator1.set_drag(1.5f);
     EXPECT_FLOAT_EQ(integrator1.drag(), 1.0f);
 }
+
+} // namespace PhysicsSimulation

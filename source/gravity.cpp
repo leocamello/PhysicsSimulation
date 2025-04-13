@@ -21,16 +21,17 @@ GravityForceGenerator::GravityForceGenerator() noexcept
     : acceleration_(0.0f, -9.8f, 0.0f) {} // Default Earth gravity
 
 void GravityForceGenerator::ApplyForce(Particle& particle) {
-    // Ensure the particle has finite mass before applying force F = m*a
-    // TODO: Update member names once Particle class members are renamed.
-    // Using current names (_mass, _resultantForce) as requested.
-    if (particle._mass <= 0.0f) { // Check for zero or negative mass
-        return; // Cannot apply force to objects with infinite/invalid mass
+    // Ensure the particle has finite, positive mass before applying force F = m*a
+    // Note: Particle::AddForce already handles kFixed type internally.
+    if (particle.mass() <= 0.0f) { // Check for zero or negative mass
+        return; // Cannot apply force to objects with zero/negative mass
     }
 
-    // Add gravitational force (F = m * g) to the particle's resultant force
-    // particle.resultant_force += acceleration_ * particle.mass; // Target code
-    particle._resultantForce += acceleration_ * particle._mass;
+    // Calculate gravitational force (F = m * g)
+    Vector3 gravity_force = acceleration_ * particle.mass();
+
+    // Add the calculated force to the particle's accumulator
+    particle.AddForce(gravity_force);
 }
 
 void GravityForceGenerator::set_acceleration(const Vector3& acceleration) noexcept {

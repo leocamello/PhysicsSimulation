@@ -17,74 +17,71 @@
 #include "PhysicsSimulation/euler.h"      // Derived class EulerIntegrator
 #include "PhysicsSimulation/medium.h"
 #include "PhysicsSimulation/simulation.h"
+#include "PhysicsSimulation/particle.h"
+#include "PhysicsSimulation/plane.h"
 
 Simulation* mySim = new Simulation();
 
 static void Initialize()
 {
-	Particle::ParticleType passive = Particle::ParticleType::PASSIVE;
-	Particle::ParticleType active = Particle::ParticleType::ACTIVE;
+	// Particle::Type passive = Particle::Type::kFixed;
+	// Particle::Type active = Particle::Type::kActive;
 
-	//
-	// Criando caixa a partir de planos
-	//
-	float size = 3.0f;
+	// //
+	// // Criando caixa a partir de planos
+	// //
+	// float size = 3.0f;
 
-	float planeR = 0.5f;
-	float planeG = 0.5f;
-	float planeB = 0.5f;
+	// float planeR = 0.5f;
+	// float planeG = 0.5f;
+	// float planeB = 0.5f;
 
-	// Plane Bottom
-	Vector3 normal0 = Vector3(0.0f, 1.0f, 0.0f);
-	Vector3 position0 = Vector3(0.0f, 0.0f, 0.0f);
+	// // Plane Bottom
+	// Vector3 normal0 = Vector3(0.0f, 1.0f, 0.0f);
+	// Vector3 position0 = Vector3(0.0f, 0.0f, 0.0f);
 
-	Plane* plane0 = new Plane();
-	plane0->Initialize(size, normal0, position0, planeR, planeG, planeB);
-	mySim->AddPlane(plane0);
+	// Plane* plane0 = new Plane(normal0, position0, size, planeR, planeG, planeB);
+	// mySim->AddPlane(plane0);
 
-	// Plane Right
-	Vector3 normal1 = Vector3(-1.0f, 0.0f, 0.0f);
-	Vector3 position1 = Vector3(size, size, 0.0f);
+	// // Plane Right
+	// Vector3 normal1 = Vector3(-1.0f, 0.0f, 0.0f);
+	// Vector3 position1 = Vector3(size, size, 0.0f);
 
-	Plane* plane1 = new Plane();
-	plane1->Initialize(size, normal1, position1, planeR, planeG, planeB);
-	mySim->AddPlane(plane1);
+	// Plane* plane1 = new Plane(normal1, position1, size, planeR, planeG, planeB);
+	// mySim->AddPlane(plane1);
 
-	// Plane Left
-	Vector3 normal2 = Vector3(1.0f, 0.0f, 0.0f);
-	Vector3 position2 = Vector3(-size, size, 0.0f);
+	// // Plane Left
+	// Vector3 normal2 = Vector3(1.0f, 0.0f, 0.0f);
+	// Vector3 position2 = Vector3(-size, size, 0.0f);
 
-	Plane* plane2 = new Plane();
-	plane2->Initialize(size, normal2, position2, planeR, planeG, planeB);
-	mySim->AddPlane(plane2);
+	// Plane* plane2 = new Plane(normal2, position2, size, planeR, planeG, planeB);
+	// mySim->AddPlane(plane2);
 
-	// Plane Front
-	Vector3 normal3 = Vector3(0.0f, 0.0f, -1.0f);
-	Vector3 position3 = Vector3(0.0f, size, size);
+	// // Plane Front
+	// Vector3 normal3 = Vector3(0.0f, 0.0f, -1.0f);
+	// Vector3 position3 = Vector3(0.0f, size, size);
 
-	Plane* plane3 = new Plane();
-	plane3->Initialize(size, normal3, position3, planeR, planeG, planeB);
-	mySim->AddPlane(plane3);
+	// Plane* plane3 = new Plane(normal3, position3, size, planeR, planeG, planeB);
+	// mySim->AddPlane(plane3);
 
-	// Plane Back
-	Vector3 normal4 = Vector3(0.0f, 0.0f, 1.0f);
-	Vector3 position4 = Vector3(0.0f, size, -size);
+	// // Plane Back
+	// Vector3 normal4 = Vector3(0.0f, 0.0f, 1.0f);
+	// Vector3 position4 = Vector3(0.0f, size, -size);
 
-	Plane* plane4 = new Plane();
-	plane4->Initialize(size, normal4, position4, planeR, planeG, planeB);
-	mySim->AddPlane(plane4);
+	// Plane* plane4 = new Plane(normal4, position4, size, planeR, planeG, planeB);
+	// mySim->AddPlane(plane4);
 
-	// Particle Generator
-	float genMass = 10.0f;
-	float genRadius = 0.5f;
-	int genMax = 250;
-	float genX = 0.0f;
-	float genY = 25.0f;
-	float genZ = 0.0f;
+	// // Particle Generator
+	// float genMass = 10.0f;
+	// float genRadius = 0.5f;
+	// int genMax = 250;
+	// float genX = 0.0f;
+	// float genY = 25.0f;
+	// float genZ = 0.0f;
 
-	ParticleGenerator* generator = new ParticleGenerator();
-	generator->Initialize(genMass, genRadius, genMax, genX, genY, genZ);
-	mySim->AddParticleGenerator(generator);
+	// ParticleGenerator* generator = new ParticleGenerator();
+	// generator->Initialize(genMass, genRadius, genMax, genX, genY, genZ);
+	// mySim->AddParticleGenerator(generator);
 
 // 	// Particle
 // 	float particleMass = 100.0f;
@@ -133,22 +130,22 @@ static void Initialize()
 // 	cloth->Initialize(clothMass, clothRadius, nU, nV, p, pU, pV, clothR, clothG, clothB, active);
 // 	mySim->AddCloth(cloth);
 
-	GravityForceGenerator* gravity = new GravityForceGenerator(); // Use correct class name
-	mySim->AddForceGenerator(gravity); // No need for C-style cast, implicit upcast works
-	/*Medium* air = new Medium(0.50f);
-	mySim->AddForceGenerator(air);*/ // No need for C-style cast here either
+	// GravityForceGenerator* gravity = new GravityForceGenerator(); // Use correct class name
+	// mySim->AddForceGenerator(gravity); // No need for C-style cast, implicit upcast works
+	// /*Medium* air = new Medium(0.50f);
+	// mySim->AddForceGenerator(air);*/ // No need for C-style cast here either
 
-	EulerIntegrator* integrator = new EulerIntegrator();
-	mySim->_integrator = integrator; // Implicit upcast from EulerIntegrator* to Integrator*
+	// EulerIntegrator* integrator = new EulerIntegrator();
+	// mySim->_integrator = integrator; // Implicit upcast from EulerIntegrator* to Integrator*
 
-	/*Verlet* integrator = new Verlet(); // Assuming VerletIntegrator exists similarly
-	mySim->_integrator = integrator;*/
+	// /*Verlet* integrator = new Verlet(); // Assuming VerletIntegrator exists similarly
+	// mySim->_integrator = integrator;*/
 }
 
 static void Update()
 {
 	//for(int i = 0; i < 10; i++)
-		mySim->Update();
+		mySim->Update(0.05f);
 }
 
 static void Draw()

@@ -16,10 +16,10 @@ void EulerIntegrator::Integrate(const Vector3& acceleration, Particle& particle,
     }
 
     // Update position: p(t+dt) = p(t) + v(t) * dt
-    particle._currPosition += particle._currVelocity * dt;
+    particle.position_ += particle.velocity_ * dt;
 
     // Update velocity: v(t+dt) = v(t) + a(t) * dt
-    particle._currVelocity += acceleration * dt;
+    particle.velocity_ += acceleration * dt;
 
     // Note: This integrator does not update particle.previous_position
 }

@@ -1,100 +1,61 @@
 /**
  * @file particle.cpp
  * @brief Implements the Particle class methods.
- * @author L. Camello (original), L. Nascimento (updated)
- * @date 2025-04-12
+ * @author L. Camello (original), L. Nascimento (updated), GitHub Copilot (refactored)
+ * @date 2025-04-13
  */
 
-#include "PhysicsSimulation/graphics.h" // Assuming graphics.h is namespaced or will be
 #include "PhysicsSimulation/particle.h"
+#include "PhysicsSimulation/graphics.h" // Include for Draw() - Consider alternatives
+#include "PhysicsSimulation/vector.h"   // Included via particle.h, but good practice
 
-// TODO: Consider uncommenting and using this namespace
-// namespace PhysicsSimulation {
+// namespace PhysicsSimulation { // TODO: Add namespace if used elsewhere
 
 Particle::Particle() noexcept
-{
-    // Default member initialization handles setup
+    : mass_(0.0f),
+      radius_(0.1f),
+      position_(0.0f, 0.0f, 0.0f),
+      velocity_(0.0f, 0.0f, 0.0f),
+      previous_position_(0.0f, 0.0f, 0.0f),
+      force_accumulator_(0.0f, 0.0f, 0.0f),
+      color_(1.0f, 1.0f, 1.0f),
+      type_(Type::kActive)
+{}
+
+Particle::Particle(float mass, float radius,
+                   const Vector3& position, const Vector3& velocity,
+                   const Vector3& color, Type type) noexcept
+    : mass_(mass),
+      radius_(radius),
+      position_(position),
+      velocity_(velocity),
+      previous_position_(position),
+      force_accumulator_(0.0f, 0.0f, 0.0f),
+      color_(color),
+      type_(type)
+{}
+
+void Particle::AddForce(const Vector3& force) noexcept {
+    if (type_ != Type::kFixed) {
+        force_accumulator_ += force;
+    }
 }
 
-Particle::~Particle() noexcept
-{
-    // No resources to release
+void Particle::ClearForceAccumulator() noexcept {
+    force_accumulator_.Set(0.0f, 0.0f, 0.0f);
 }
 
-// Documentation is primarily in the header file (.h)
-void Particle::Initialize(
-        float m,
-        float radius,
-        float x, float y, float z,
-        float r, float g, float b,
-        ParticleType type) noexcept
-{
-    _red = r;
-    _green = g;
-    _blue = b;
-    _mass = m;
-    _radius = radius;
-    _currPosition.Set(x, y, z); // Use Set method if available
-    _currVelocity.Set(0.0f, 0.0f, 0.0f);
-    _resultantForce.Set(0.0f, 0.0f, 0.0f);
-    _prevPosition = _currPosition; // Initialize previous position
-    _particleType = type;
-}
+void Particle::Draw() const {
+    float pos_arr[3] = {position_.x, position_.y, position_.z};
+    float col_arr[3] = {color_.x, color_.y, color_.z};
 
-// Documentation is primarily in the header file (.h)
-void Particle::Initialize(
-        float m,
-        float radius,
-        float px, float py, float pz,
-        float vx, float vy, float vz,
-        float r, float g, float b,
-        ParticleType type) noexcept
-{
-    _red = r;
-    _green = g;
-    _blue = b;
-    _mass = m;
-    _radius = radius;
-    _currPosition.Set(px, py, pz);
-    _currVelocity.Set(vx, vy, vz);
-    _resultantForce.Set(0.0f, 0.0f, 0.0f);
-    _prevPosition = _currPosition; // Initialize previous position
-    _particleType = type;
-}
+    bool use_spheres = true;
 
-// Documentation is primarily in the header file (.h)
-void Particle::Update() noexcept
-{
-    // Implementation depends on the chosen integration method (e.g., Verlet, Euler)
-    // This function might update _prevPosition, _currPosition, _currVelocity
-}
-
-// Documentation is primarily in the header file (.h)
-void Particle::DrawPoint()
-{
-    // Use Vector3 components directly
-    float color[3] = {_red, _green, _blue};
-    float coord[3] = {_currPosition.x, _currPosition.y, _currPosition.z};
-
-    // Assuming Graphics is a static class or namespace
-    Graphics::DrawPointParticles(1, _radius, coord, color);
-}
-
-// Documentation is primarily in the header file (.h)
-void Particle::DrawSphere()
-{
-    // Use Vector3 components directly
-    float color[3] = {_red, _green, _blue};
-    float coord[3] = {_currPosition.x, _currPosition.y, _currPosition.z};
-
-    // Assuming Graphics is a static class or namespace
-    Graphics::DrawSphereParticles(1, _radius, coord, color);
-}
-
-// Documentation is primarily in the header file (.h)
-void Particle::ResetForces() noexcept
-{
-    _resultantForce.Set(0.0f, 0.0f, 0.0f); // Use Set method
+    if (use_spheres) {
+        Graphics::DrawSphereParticles(1, radius_, pos_arr, col_arr);
+    } else {
+        Graphics::DrawPointParticles(1, radius_, pos_arr, col_arr);
+    }
 }
 
 // } // namespace PhysicsSimulation

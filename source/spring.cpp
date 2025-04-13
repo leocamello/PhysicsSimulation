@@ -10,7 +10,8 @@
 #include "PhysicsSimulation/vector.h"   // Include Vector3 definition
 #include "PhysicsSimulation/graphics.h" // Include for Draw() - Consider alternatives
 #include <stdexcept> // For std::invalid_argument
-#include <cmath>     // For std::fabs
+#include <cmath>     // For std::fabs, std::clamp
+#include <algorithm> // For std::clamp
 
 // Helper validation function (optional, can be inline in constructors)
 namespace {
@@ -38,9 +39,10 @@ Spring::Spring(float stiffness, float damping, Particle* particle_a, Particle* p
 
     ValidateSpringParameters(stiffness_, damping_, particle_a_, particle_b_);
 
-    const Vector3 direction = particle_a_->_currPosition - particle_b_->_currPosition;
+    // Use getter methods for particle positions
+    const Vector3 direction = particle_a_->position() - particle_b_->position();
     rest_length_ = direction.Length();
-     if (rest_length_ < 1e-6f) {
+     if (rest_length_ < 1e-6f) { // Handle case where particles start at the same position
          rest_length_ = 0.0f;
      }
 }
@@ -53,30 +55,40 @@ Spring::Spring(float stiffness, float damping, Particle* particle_a, Particle* p
 }
 
 void Spring::ApplyForce() {
+    // Ensure particles are valid (already checked in constructor, but belt-and-suspenders)
     if (!particle_a_ || !particle_b_) {
         return;
     }
 
-    Vector3 direction = particle_a_->_currPosition - particle_b_->_currPosition;
+    // Use getter methods for particle state
+    Vector3 direction = particle_a_->position() - particle_b_->position();
     float current_length = direction.Length();
 
-    if (current_length < 1e-6f) {
-        return;
+    // Avoid division by zero or issues if particles are coincident
+    if (current_length < 1e-6f) { // Use a small epsilon
+        return; // No force can be applied if length is effectively zero
     }
 
-    Vector3 unit_direction = direction / current_length;
+    // Normalize the direction vector
+    Vector3 unit_direction = direction / current_length; // Normalize (length is non-zero here)
 
-    Vector3 relative_velocity = particle_a_->_currVelocity - particle_b_->_currVelocity;
+    // Calculate relative velocity along the spring axis
+    Vector3 relative_velocity = particle_a_->velocity() - particle_b_->velocity();
     float velocity_along_direction = Dot(relative_velocity, unit_direction);
 
+    // Calculate spring force (Hooke's Law: F_s = -k * (L - L0) * unit_direction)
     float spring_magnitude = -stiffness_ * (current_length - rest_length_);
+
+    // Calculate damping force (F_d = -b * v_rel_along_axis * unit_direction)
     float damping_magnitude = -damping_ * velocity_along_direction;
 
+    // Calculate total force magnitude
     float total_magnitude = spring_magnitude + damping_magnitude;
     Vector3 total_force = unit_direction * total_magnitude;
 
-    particle_a_->_resultantForce += total_force;
-    particle_b_->_resultantForce -= total_force;
+    // Apply force to particles using AddForce method
+    particle_a_->AddForce(total_force);
+    particle_b_->AddForce(-total_force); // Apply equal and opposite force
 }
 
 void Spring::Draw() const {
@@ -84,16 +96,16 @@ void Spring::Draw() const {
         return;
     }
 
-    float coord1[3] = {
-        particle_a_->_currPosition.x,
-        particle_a_->_currPosition.y,
-        particle_a_->_currPosition.z};
-    float coord2[3] = {
-        particle_b_->_currPosition.x,
-        particle_b_->_currPosition.y,
-        particle_b_->_currPosition.z};
+    // Use getter methods for particle positions
+    const Vector3 pos_a = particle_a_->position();
+    const Vector3 pos_b = particle_b_->position();
 
-    float current_length = (particle_a_->_currPosition - particle_b_->_currPosition).Length();
+    // TODO: Check if Graphics::DrawSpring can take Vector3 directly
+    float coord1[3] = {pos_a.x, pos_a.y, pos_a.z};
+    float coord2[3] = {pos_b.x, pos_b.y, pos_b.z};
+
+    // Calculate current length for drawing
+    float current_length = (pos_a - pos_b).Length();
 
     Graphics::DrawSpring(current_length, rest_length_, coord1, coord2);
 }

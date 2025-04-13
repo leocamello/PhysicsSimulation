@@ -8,114 +8,107 @@
 #ifndef PHYSICS_SIMULATION_PARTICLE_GENERATOR_H
 #define PHYSICS_SIMULATION_PARTICLE_GENERATOR_H
 
-#include <vector>
-#include <memory> // For std::unique_ptr
-#include <random> // For modern C++ random number generation
-#include <cstddef> // For size_t
+#include "PhysicsSimulation/particle.h" // Include Particle definition
+#include "PhysicsSimulation/vector.h"   // Include Vector3 definition
+#include <vector>                       // For std::vector
+#include <memory>                       // For std::unique_ptr
+#include <random>                       // For random number generation
 
-#include "PhysicsSimulation/particle.h"
-#include "PhysicsSimulation/vector.h"
-
-// TODO: Consider uncommenting and using this namespace
-// namespace PhysicsSimulation {
+//namespace PhysicsSimulation {
 
 /**
- * @brief Generates and manages a collection of Particle objects using modern C++.
+ * @brief Generates and manages a collection of particles.
  *
- * Initializes a specified number of particles with randomized properties
- * around a central position. Uses RAII for memory management and the C++
- * <random> library for pseudo-random number generation.
+ * Creates particles with randomized properties within specified ranges
+ * around a generation point. Manages particles using unique pointers.
  */
 class ParticleGenerator {
 public:
     /**
-     * @brief Constructor. Initializes the random number generator.
+     * @brief Constructs and initializes the particle generator.
+     *
+     * @param mass The default mass for generated particles.
+     * @param radius The default radius for generated particles.
+     * @param initial_count The number of particles to generate initially.
+     * @param generation_center The center position around which particles are generated.
+     * @param generation_range_xy The half-range for random position offsets in X and Z.
+     * @param generation_range_y The full range for random position offsets in Y (typically positive).
      */
-    ParticleGenerator() noexcept;
+    ParticleGenerator(float mass, float radius, size_t initial_count,
+                      const Vector3& generation_center,
+                      float generation_range_xz = 2.0f,
+                      float generation_range_y = 500.0f) noexcept;
 
-    // Default destructor is sufficient due to RAII (vector and unique_ptr handle cleanup)
-    ~ParticleGenerator() = default;
+    /**
+     * @brief Default virtual destructor.
+     */
+    virtual ~ParticleGenerator() = default;
 
-    // --- Disable Copying and Assignment (unique_ptr makes class non-copyable) ---
+    // --- Prevent Copying ---
     ParticleGenerator(const ParticleGenerator&) = delete;
     ParticleGenerator& operator=(const ParticleGenerator&) = delete;
+
     // --- Allow Moving ---
     ParticleGenerator(ParticleGenerator&&) noexcept = default;
     ParticleGenerator& operator=(ParticleGenerator&&) noexcept = default;
 
     /**
-     * @brief Initializes the generator and creates the initial set of particles.
-     *
-     * Clears any existing particles and generates 'max_count' new ones.
-     *
-     * @param mass The mass for each generated particle.
-     * @param radius The radius for each generated particle.
-     * @param max_count The number of particles to create.
-     * @param x The central x-coordinate for particle generation.
-     * @param y The central y-coordinate for particle generation.
-     * @param z The central z-coordinate for particle generation.
-     * @note Particles are created with random positions and colors around (x, y, z).
-     */
-    void Initialize(float mass, float radius, size_t max_count, float x, float y, float z);
-
-    /**
-     * @brief Updates the state of the generator (currently placeholder).
-     * @todo Implement particle generation/update logic over time if needed.
+     * @brief Updates the particle generator state (e.g., generate new particles over time).
+     * @note Currently a placeholder.
      */
     void Update();
 
+    // --- Accessors ---
     /**
-     * @brief Gets the number of particles currently managed by the generator.
+     * @brief Gets the number of particles currently managed.
      * @return The number of particles.
      */
     size_t GetParticleCount() const noexcept { return particles_.size(); }
 
     /**
-     * @brief Provides access to the vector of particle unique pointers.
-     * @return A constant reference to the internal vector of particle pointers.
-     * @warning Use with care. Modifying the unique_ptr outside the generator
-     *          can lead to issues. Prefer accessing particles via GetParticle().
-     */
-    const std::vector<std::unique_ptr<Particle>>& GetParticles() const noexcept {
-        return particles_;
-    }
-
-    /**
-     * @brief Provides access to a specific particle by index.
-     * @param index The index of the particle to retrieve.
-     * @return A constant reference to the particle at the specified index.
-     * @throws std::out_of_range if the index is invalid.
+     * @brief Gets a constant reference to a particle by index.
+     * @param index The index of the particle.
+     * @return Constant reference to the particle.
+     * @throws std::out_of_range if index is invalid.
      */
     const Particle& GetParticle(size_t index) const;
 
     /**
-     * @brief Provides access to a specific particle by index.
-     * @param index The index of the particle to retrieve.
-     * @return A reference to the particle at the specified index.
-     * @throws std::out_of_range if the index is invalid.
+     * @brief Gets a non-constant reference to a particle by index.
+     * @param index The index of the particle.
+     * @return Reference to the particle.
+     * @throws std::out_of_range if index is invalid.
      */
     Particle& GetParticle(size_t index);
 
+    /**
+     * @brief Gets a constant reference to the internal vector of particle pointers.
+     * @return Constant reference to the vector.
+     */
+    const std::vector<std::unique_ptr<Particle>>& particles() const noexcept { return particles_; }
+
+    /**
+     * @brief Gets a non-constant reference to the internal vector of particle pointers.
+     * @return Reference to the vector.
+     */
+    std::vector<std::unique_ptr<Particle>>& particles() noexcept { return particles_; }
 
 private:
-    /** @brief Default mass for generated particles. */
+    // Member variables
     float default_mass_ = 1.0f;
-    /** @brief Default radius for generated particles. */
     float default_radius_ = 0.1f;
-    /** @brief Central position for particle generation. */
     Vector3 generation_position_;
+    float generation_range_xz_ = 2.0f;
+    float generation_range_y_ = 500.0f;
 
-    /** @brief Container for the managed particle objects. */
     std::vector<std::unique_ptr<Particle>> particles_;
 
-    /** @brief Random number engine. */
+    // Random number generation members
     std::mt19937 random_engine_;
-    /** @brief Distribution for generating values roughly in [-1, 1]. */
     std::uniform_real_distribution<float> uniform_dist_sym_;
-    /** @brief Distribution for generating values roughly in [0, 1]. */
     std::uniform_real_distribution<float> uniform_dist_pos_;
 };
 
-// } // namespace PhysicsSimulation
+//} // namespace PhysicsSimulation
 
 #endif // PHYSICS_SIMULATION_PARTICLE_GENERATOR_H

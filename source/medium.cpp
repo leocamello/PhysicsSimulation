@@ -1,28 +1,45 @@
-// medium.cpp
-// Simula��o F�sica para Jogos
-// L. Camello - camello@tecgraf.puc-rio.br
-// PUC-Rio, Set 2009
+/**
+ * @file medium.cpp
+ * @brief Implements the Medium class methods.
+ * @author L. Camello (original), GitHub Copilot (refactored)
+ * @date 2025-04-13
+ */
 
-#include "PhysicsSimulation/vector.h"
-#include "PhysicsSimulation/particle.h"
 #include "PhysicsSimulation/medium.h"
+#include "PhysicsSimulation/particle.h" // Included via medium.h
+#include "PhysicsSimulation/vector.h"   // Included via medium.h
+#include <stdexcept> // For std::invalid_argument
 
-Medium::Medium()
-{
+//namespace PhysicsSimulation {
+
+Medium::Medium(float drag_coefficient)
+    : drag_coefficient_(drag_coefficient) {
+    if (drag_coefficient_ < 0.0f) {
+        throw std::invalid_argument("Medium drag coefficient cannot be negative.");
+    }
 }
 
-Medium::~Medium()
-{
+// Destructor is defaulted in the header.
+
+void Medium::ApplyForce(Particle& particle) {
+    // Check if particle is fixed or has non-positive mass (drag affects velocity, not mass directly, but good practice)
+    // Note: Particle::AddForce already handles kFixed type internally.
+    // if (particle.type() == Particle::Type::kFixed) {
+    //     return;
+    // }
+
+    // Calculate drag force: F_drag = -k * v
+    Vector3 drag_force = particle.velocity() * -drag_coefficient_;
+
+    // Add the calculated force to the particle's accumulator
+    particle.AddForce(drag_force);
 }
 
-Medium::Medium(float dragCoefficient)
-{
-	_dragCoefficient = dragCoefficient;
+void Medium::set_drag_coefficient(float drag_coefficient) {
+     if (drag_coefficient < 0.0f) {
+        throw std::invalid_argument("Medium drag coefficient cannot be negative.");
+    }
+    drag_coefficient_ = drag_coefficient;
 }
 
-void Medium::ApplyForce(Particle* particle)
-{
-	particle->_resultantForce.x += -_dragCoefficient * particle->_currVelocity.x;
-	particle->_resultantForce.y += -_dragCoefficient * particle->_currVelocity.y;
-	particle->_resultantForce.z += -_dragCoefficient * particle->_currVelocity.z;
-}
+//} // namespace PhysicsSimulation
