@@ -9,8 +9,7 @@ add_executable(PhysicsSimulation_tests ${TEST_SOURCES})
 # Assuming vector implementation is header-only or also in vector.cpp
 target_sources(PhysicsSimulation_tests PRIVATE
     ../source/particle.cpp
-    # Add vector.cpp if it exists and contains non-inline implementations
-    # ../source/vector.cpp
+    ../source/particlegenerator.cpp
 
     # Add the fake graphics implementation FOR THE TEST BUILD ONLY
     fake_graphics.cpp

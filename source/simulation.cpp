@@ -133,11 +133,17 @@ void Simulation::AddForceGenerator(ForceGenerator* forceGenerator)
 void Simulation::AddParticleGenerator(ParticleGenerator* particleGenerator)
 {
 	// adiciona as particulas do gerador ao sistema
-	for(int i = _currParticle; i < _currParticle + particleGenerator->_max; i++)
+	size_t particle_count = particleGenerator->GetParticleCount();
+	// Ensure there's enough space in _particles (assuming it's a fixed-size array)
+	// A more robust solution would use std::vector or check bounds here.
+	for (size_t i = 0; i < particle_count; ++i)
 	{
-		_particles[i] = particleGenerator->_particles[i - _currParticle];
+		// Get the address of the particle managed by the generator
+		// Warning: Simulation now holds raw pointers to particles owned by ParticleGenerator.
+		// This can lead to dangling pointers if the generator is destroyed or modifies its particles_.
+		_particles[_currParticle + i] = &particleGenerator->GetParticle(i);
 	}
-	_currParticle += particleGenerator->_max;
+	_currParticle += particle_count;
 }
 
 void Simulation::AddConstraint(float length, Particle* particleA, Particle* particleB)
