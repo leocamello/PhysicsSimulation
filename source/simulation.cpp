@@ -174,10 +174,10 @@ void Simulation::AddSpring(float stiffness, float damping, Particle* particleA, 
 
 void Simulation::UpdateSprings()
 {
-	Particle p;
+	// Particle p; // Removed unused particle
 	for(int i = 0; i < _currSpring; i++)
 	{
-		_springs[i]->ApplyForce(p);
+		_springs[i]->ApplyForce(); // ApplyForce takes no arguments
 	}
 }
 
@@ -201,7 +201,7 @@ void Simulation::UpdateParticles()
 		{
 			for(int j = 0; j < _currForceGenerator; j++)
 			{
-				_forceGenerators[j]->ApplyForce(_particles[i]);
+				_forceGenerators[j]->ApplyForce(*_particles[i]);
 			}
 		}
 	}

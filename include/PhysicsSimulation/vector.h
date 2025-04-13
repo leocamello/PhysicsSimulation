@@ -267,6 +267,22 @@ struct Vector3
     }
 
     /**
+     * @brief Returns a normalized copy of the vector.
+     * @return A new vector with length 1, pointing in the same direction.
+     * @note If the original length is near zero, returns a zero vector.
+     */
+    Vector3 Normalized() const noexcept
+    {
+        float l = Length();
+        // Use a small epsilon to avoid division by near-zero values
+        if (l > 1e-6f) {
+            float inv_l = 1.0f / l;
+            return Vector3(x * inv_l, y * inv_l, z * inv_l);
+        }
+        return Vector3(); // Return zero vector for zero/near-zero length input
+    }
+
+    /**
      * @brief Adds another vector to this vector.
      * @param other The vector to add.
      * @return A reference to this modified vector.

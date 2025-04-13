@@ -133,10 +133,10 @@ static void Initialize()
 // 	cloth->Initialize(clothMass, clothRadius, nU, nV, p, pU, pV, clothR, clothG, clothB, active);
 // 	mySim->AddCloth(cloth);
 
-	Gravity* gravity = new Gravity();
-	mySim->AddForceGenerator((ForceGenerator*)gravity);
+	GravityForceGenerator* gravity = new GravityForceGenerator(); // Use correct class name
+	mySim->AddForceGenerator(gravity); // No need for C-style cast, implicit upcast works
 	/*Medium* air = new Medium(0.50f);
-	mySim->AddForceGenerator((ForceGenerator*)air);*/
+	mySim->AddForceGenerator(air);*/ // No need for C-style cast here either
 
 	EulerIntegrator* integrator = new EulerIntegrator();
 	mySim->_integrator = integrator; // Implicit upcast from EulerIntegrator* to Integrator*

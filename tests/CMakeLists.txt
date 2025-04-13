@@ -12,6 +12,8 @@ target_sources(PhysicsSimulation_tests PRIVATE
     ../source/particlegenerator.cpp
     ../source/euler.cpp
     ../source/verlet.cpp
+    ../source/gravity.cpp
+    ../source/spring.cpp
 
     # Add the fake graphics implementation FOR THE TEST BUILD ONLY
     fake_graphics.cpp

@@ -3,10 +3,10 @@
  * @file fake_graphics.cpp
  * @brief Fake implementation of Graphics functions needed for linking tests.
  * @author GitHub Copilot
- * @date 2025-04-12
+ * @date 2025-04-13
  */
 
-// Define a minimal Graphics structure or namespace to match what particle.cpp expects.
+// Define a minimal Graphics structure or namespace to match what the code expects.
 // Adjust this if your actual Graphics class is structured differently.
 namespace Graphics {
 
@@ -28,7 +28,16 @@ namespace Graphics {
         (void)colors;
     }
 
-    // Add other Graphics functions here if Particle calls them directly or indirectly
-    // and causes linker errors.
+    // Provide dummy implementation for DrawSpring called by Spring
+    void DrawSpring(float width, float lrest, float *coord1, float* coord2) {
+        // Do nothing.
+        (void)width; // Suppress unused parameter warnings
+        (void)lrest;
+        (void)coord1;
+        (void)coord2;
+    }
+
+    // Add other Graphics functions here if other classes call them directly or indirectly
+    // and cause linker errors during testing.
 
 } // namespace Graphics

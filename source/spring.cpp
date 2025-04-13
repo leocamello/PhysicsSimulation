@@ -1,89 +1,99 @@
-// spring.cpp
-// Simula��o F�sica para Jogos
-// L. Camello - camello@tecgraf.puc-rio.br
-// PUC-Rio, Set 2009
+/**
+ * @file spring.cpp
+ * @brief Implements the Spring class methods.
+ * @author L. Camello (original), L. Nascimento (updated), GitHub Copilot (refactored)
+ * @date 2025-04-13
+ */
 
-#include "PhysicsSimulation/graphics.h"
-
-#include "PhysicsSimulation/vector.h"
-#include "PhysicsSimulation/particle.h"
 #include "PhysicsSimulation/spring.h"
+#include "PhysicsSimulation/particle.h" // Include Particle definition
+#include "PhysicsSimulation/vector.h"   // Include Vector3 definition
+#include "PhysicsSimulation/graphics.h" // Include for Draw() - Consider alternatives
+#include <stdexcept> // For std::invalid_argument
+#include <cmath>     // For std::fabs
 
-Spring::Spring()
-{
+// Helper validation function (optional, can be inline in constructors)
+namespace {
+void ValidateSpringParameters(float stiffness, float damping, Particle* p_a, Particle* p_b, float rest_length = 0.0f) {
+    if (!p_a || !p_b) {
+        throw std::invalid_argument("Spring particle pointers cannot be null.");
+    }
+    if (p_a == p_b) {
+        throw std::invalid_argument("Spring particles must be different.");
+    }
+    if (stiffness <= 0.0f) {
+        throw std::invalid_argument("Spring stiffness must be positive.");
+    }
+    if (damping < 0.0f) {
+        throw std::invalid_argument("Spring damping cannot be negative.");
+    }
+     if (rest_length < 0.0f) {
+        throw std::invalid_argument("Spring rest length cannot be negative.");
+    }
+}
+} // namespace
+
+Spring::Spring(float stiffness, float damping, Particle* particle_a, Particle* particle_b)
+    : stiffness_(stiffness), damping_(damping), particle_a_(particle_a), particle_b_(particle_b) {
+
+    ValidateSpringParameters(stiffness_, damping_, particle_a_, particle_b_);
+
+    const Vector3 direction = particle_a_->_currPosition - particle_b_->_currPosition;
+    rest_length_ = direction.Length();
+     if (rest_length_ < 1e-6f) {
+         rest_length_ = 0.0f;
+     }
 }
 
-Spring::~Spring()
-{
+Spring::Spring(float stiffness, float damping, Particle* particle_a, Particle* particle_b, float rest_length)
+    : stiffness_(stiffness), damping_(damping), rest_length_(rest_length),
+      particle_a_(particle_a), particle_b_(particle_b) {
+
+    ValidateSpringParameters(stiffness_, damping_, particle_a_, particle_b_, rest_length_);
 }
 
-Spring::Spring(float stiffness, float damping, Particle* particleA, Particle* particleB)
-{
-	_stiffness = stiffness;
-	_damping = damping;
-	_particleA = particleA;
-	_particleB = particleB;
+void Spring::ApplyForce() {
+    if (!particle_a_ || !particle_b_) {
+        return;
+    }
 
-	_direction.x = _particleA->_currPosition.x - _particleB->_currPosition.x;
-	_direction.y = _particleA->_currPosition.y - _particleB->_currPosition.y;
-	_direction.z = _particleA->_currPosition.z - _particleB->_currPosition.z;
+    Vector3 direction = particle_a_->_currPosition - particle_b_->_currPosition;
+    float current_length = direction.Length();
 
-	_restLength = _direction.Length();
+    if (current_length < 1e-6f) {
+        return;
+    }
+
+    Vector3 unit_direction = direction / current_length;
+
+    Vector3 relative_velocity = particle_a_->_currVelocity - particle_b_->_currVelocity;
+    float velocity_along_direction = Dot(relative_velocity, unit_direction);
+
+    float spring_magnitude = -stiffness_ * (current_length - rest_length_);
+    float damping_magnitude = -damping_ * velocity_along_direction;
+
+    float total_magnitude = spring_magnitude + damping_magnitude;
+    Vector3 total_force = unit_direction * total_magnitude;
+
+    particle_a_->_resultantForce += total_force;
+    particle_b_->_resultantForce -= total_force;
 }
 
-Spring::Spring(float stiffness, float damping, Particle* particleA, Particle* particleB, float restLength)
-{
-	_stiffness = stiffness;
-	_damping = damping;
-	_particleA = particleA;
-	_particleB = particleB;
-	_restLength = restLength;
-}
+void Spring::Draw() const {
+     if (!particle_a_ || !particle_b_) {
+        return;
+    }
 
-void Spring::Update()
-{
-}
+    float coord1[3] = {
+        particle_a_->_currPosition.x,
+        particle_a_->_currPosition.y,
+        particle_a_->_currPosition.z};
+    float coord2[3] = {
+        particle_b_->_currPosition.x,
+        particle_b_->_currPosition.y,
+        particle_b_->_currPosition.z};
 
-void Spring::Draw()
-{
-	float coord1[3] = {
-		_particleA->_currPosition.x,
-		_particleA->_currPosition.y,
-		_particleA->_currPosition.z};
-	float coord2[3] = {
-		_particleB->_currPosition.x,
-		_particleB->_currPosition.y,
-		_particleB->_currPosition.z};
+    float current_length = (particle_a_->_currPosition - particle_b_->_currPosition).Length();
 
-	Graphics::DrawSpring(
-		_direction.Length(), _restLength, coord1, coord2);
-}
-
-void Spring::ApplyForce(Particle particle)
-{
-	_direction.x = _particleA->_currPosition.x - _particleB->_currPosition.x;
-	_direction.y = _particleA->_currPosition.y - _particleB->_currPosition.y;
-	_direction.z = _particleA->_currPosition.z - _particleB->_currPosition.z;
-
-	if(_direction.x != 0.0f || _direction.y != 0.0f || _direction.z != 0.0f)
-	{
-		_currLength = _direction.Length();
-		_direction.Normalize();
-
-		_force.x = -_stiffness * (( _currLength - _restLength) * _direction.x);		
-		_force.y = -_stiffness * (( _currLength - _restLength) * _direction.y);
-		_force.z = -_stiffness * (( _currLength - _restLength) * _direction.z);
-
-		Vector3 velocity;
-		velocity.x = _particleA->_currVelocity.x - _particleB->_currVelocity.x;
-		velocity.y = _particleA->_currVelocity.y - _particleB->_currVelocity.y;
-		velocity.z = _particleA->_currVelocity.z - _particleB->_currVelocity.z;
-
-		_force.x += -_damping * Dot(velocity, _direction) * _direction.x;
-		_force.y += -_damping * Dot(velocity, _direction) * _direction.y;
-		_force.z += -_damping * Dot(velocity, _direction) * _direction.z;
-
-		_particleA->_resultantForce += _force;
-		_particleB->_resultantForce += - _force;
-	}
+    Graphics::DrawSpring(current_length, rest_length_, coord1, coord2);
 }
