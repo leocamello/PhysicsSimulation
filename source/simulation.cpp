@@ -16,7 +16,19 @@ Simulation::Simulation()
 
 	_dissipative = 0.5f;
 
-	_integrator = new Integrator();
+	// Integrator is now an abstract base class and cannot be instantiated directly.
+	// You must instantiate a concrete derived class, e.g., EulerIntegrator.
+	// #include "PhysicsSimulation/euler_integrator.h" // Make sure to include the concrete integrator header
+	// _integrator = new EulerIntegrator(); // Example instantiation
+
+	// For better resource management, consider using a smart pointer:
+	// std::unique_ptr<Integrator> integrator_; // In Simulation class definition
+	// integrator_ = std::make_unique<EulerIntegrator>(); // In constructor
+
+	// For now, let's initialize it to nullptr, assuming it will be set later
+	// or via dependency injection. If a default is always needed, uncomment
+	// and adapt the instantiation line above.
+	_integrator = nullptr; // Or initialize with a default concrete integrator
 }
 
 void Simulation::AddCube(Cube* cube)
@@ -204,7 +216,14 @@ void Simulation::UpdateParticles()
 			_acceleration.y = _particles[i]->_resultantForce.y / mass;
 			_acceleration.z = _particles[i]->_resultantForce.z / mass;
 
-			_integrator->Integrate(_acceleration, _particles[i]);
+			// Integrate method now requires Particle& and dt.
+			// Ensure _integrator is valid and dt is passed to this function.
+			// TODO: Pass dt as an argument to Simulation::Update and Simulation::UpdateParticles.
+			if (_integrator) { // Check if integrator exists
+				_integrator->Integrate(_acceleration, *_particles[i], 0.05f); // Pass particle by reference and add dt
+			} else {
+				// Handle the case where no integrator is set (e.g., log an error)
+			}
 		}
 	}
 

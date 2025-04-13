@@ -1,23 +1,25 @@
-// euler.cpp
-// Simula��o F�sica para Jogos
-// L. Camello - camello@tecgraf.puc-rio.br
-// PUC-Rio, Set 2009
+/**
+ * @file euler.cpp
+ * @brief Implements the EulerIntegrator class methods.
+ * @author L. Camello (original), L. Nascimento (updated), GitHub Copilot (refactored)
+ * @date 2025-04-13
+ */
 
-#include "PhysicsSimulation/vector.h"
-#include "PhysicsSimulation/particle.h"
 #include "PhysicsSimulation/euler.h"
+#include "PhysicsSimulation/particle.h" // Include Particle definition
+#include "PhysicsSimulation/vector.h"   // Include Vector3 definition
 
-Euler::Euler()
-{
-}
+void EulerIntegrator::Integrate(const Vector3& acceleration, Particle& particle, float dt) {
+    // Ensure dt is non-negative; handle potential issues if necessary
+    if (dt <= 0.0f) {
+        return; // Or handle as an error/assertion
+    }
 
-void Euler::Integrate(Vector3 acceleration, Particle* particle)
-{
-	particle->_currPosition.x += particle->_currVelocity.x * _fixedTimeStep;
-	particle->_currPosition.y += particle->_currVelocity.y * _fixedTimeStep;
-	particle->_currPosition.z += particle->_currVelocity.z * _fixedTimeStep;
-	
-	particle->_currVelocity.x += acceleration.x * _fixedTimeStep;
-	particle->_currVelocity.y += acceleration.y * _fixedTimeStep;
-	particle->_currVelocity.z += acceleration.z * _fixedTimeStep;
+    // Update position: p(t+dt) = p(t) + v(t) * dt
+    particle._currPosition += particle._currVelocity * dt;
+
+    // Update velocity: v(t+dt) = v(t) + a(t) * dt
+    particle._currVelocity += acceleration * dt;
+
+    // Note: This integrator does not update particle.previous_position
 }

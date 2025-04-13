@@ -10,6 +10,8 @@ add_executable(PhysicsSimulation_tests ${TEST_SOURCES})
 target_sources(PhysicsSimulation_tests PRIVATE
     ../source/particle.cpp
     ../source/particlegenerator.cpp
+    ../source/euler.cpp
+    ../source/verlet.cpp
 
     # Add the fake graphics implementation FOR THE TEST BUILD ONLY
     fake_graphics.cpp

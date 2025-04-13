@@ -13,6 +13,8 @@
 
 #include "PhysicsSimulation/graphics.h"
 #include "PhysicsSimulation/gravity.h"
+#include "PhysicsSimulation/integrator.h" // Base class
+#include "PhysicsSimulation/euler.h"      // Derived class EulerIntegrator
 #include "PhysicsSimulation/medium.h"
 #include "PhysicsSimulation/simulation.h"
 
@@ -133,15 +135,14 @@ static void Initialize()
 
 	Gravity* gravity = new Gravity();
 	mySim->AddForceGenerator((ForceGenerator*)gravity);
-
 	/*Medium* air = new Medium(0.50f);
 	mySim->AddForceGenerator((ForceGenerator*)air);*/
 
-	Euler* integrator = new Euler();
-	mySim->_integrator = (Integrator*)integrator;
+	EulerIntegrator* integrator = new EulerIntegrator();
+	mySim->_integrator = integrator; // Implicit upcast from EulerIntegrator* to Integrator*
 
-	/*Verlet* integrator = new Verlet();
-	mySim->_integrator = (Integrator*)integrator;*/
+	/*Verlet* integrator = new Verlet(); // Assuming VerletIntegrator exists similarly
+	mySim->_integrator = integrator;*/
 }
 
 static void Update()
